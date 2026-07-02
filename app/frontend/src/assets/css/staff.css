@@ -107,9 +107,13 @@
 .staff__achievement__description-container {
   word-break: break-word;
   overflow-wrap: normal;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.staff__achievement__description-container.solution > p {
+.staff__achievement__description-container.solution > p, ul, li {
   color: #f87d7d;
 }
 

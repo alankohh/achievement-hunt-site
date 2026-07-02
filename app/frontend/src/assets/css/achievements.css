@@ -79,8 +79,6 @@ p {
 }
 
 .achievement__container__info {
-  flex-grow: 1;
-
   display: flex;
   flex-direction: column;
 
@@ -92,6 +90,10 @@ p {
   display: flex;
   flex-direction: row;
   gap: 10px;
+}
+
+.achievement__password-input {
+  flex-grow: 1;
 }
 
 .achievement__container__info__tags {
@@ -149,7 +151,12 @@ p {
 }
 
 .achievement__container__info__description {
-  word-break: break-all;
+  word-break: break-word;
+  overflow-wrap: normal;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .achievement__beatmap {

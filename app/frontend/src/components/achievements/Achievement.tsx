@@ -212,6 +212,7 @@ export default function Achievement({
                   name="guess"
                   placeholder="Guess password"
                   autocomplete="off"
+                  className="achievement__password-input"
                 />
                 <Button
                   children="Submit"

@@ -105,6 +105,10 @@ hr {
   background-color: #fff;
 }
 
+ul {
+  margin: 0;
+}
+
 /* Page layout */
 
 #root {

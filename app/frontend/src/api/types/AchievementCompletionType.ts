@@ -5,6 +5,7 @@ export type AchievementCompletionType = {
   time_placement: number;
   player: AchievementPlayerType;
   placement?: AchievementCompletionPlacementType | null;
+  extra: Record<string, any>;
 };
 
 export type AnonymousAchievementCompletionType = {

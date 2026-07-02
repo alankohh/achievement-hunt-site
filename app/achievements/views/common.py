@@ -78,6 +78,7 @@ def achievement(req, achievement):
             [
                 "completions__player__user",
                 "completions__placement",
+                "completions__extra",
                 "beatmaps__info",
                 "completion_count",
                 "batch",
@@ -131,6 +132,7 @@ def achievements(req, iteration):
         includes = [
             "completions__player__user",
             "completions__placement",
+            "completions__extra",
             "beatmaps__info",
             "completion_count",
             "batch",
@@ -165,6 +167,7 @@ def achievements(req, iteration):
                 "beatmaps__info",
                 SerializableField("completions__player", condition=team_completion),
                 SerializableField("completions__time_completed", condition=team_completion),
+                SerializableField("completions__extra", condition=team_completion),
                 "completions__player__user",
                 "completions__placement",
                 "batch",
@@ -207,7 +210,7 @@ def achievement_completions(req, iteration):
 
     return success(
         [
-            completion.serialize(["placement", "achievement_name", "achievement_tags", "completions"])
+            completion.serialize(["placement", "achievement_name", "achievement_tags", "completions", "extra"])
             for completion in completions
         ]
     )
