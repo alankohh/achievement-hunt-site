@@ -113,7 +113,9 @@
   gap: 8px;
 }
 
-.staff__achievement__description-container.solution > p, ul, li {
+.staff__achievement__description-container.solution > p,
+.staff__achievement__description-container.solution > ul,
+.staff__achievement__description-container.solution > li {
   color: #f87d7d;
 }
 
