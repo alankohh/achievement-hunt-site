@@ -98,6 +98,6 @@ export const OTHER_DESCRIPTIONS = {
       "This achievement is possible in, or requires, multiple game modes, but not necessarily all of them.",
   },
   completions:
-    "This shows the number of teams that have completed the achievement. It updates randomly (by design), so it is not always up-to-date.",
+    "This shows the number of teams that have completed the achievement.",
   difficulty: "This shows the average difficulty rated by the staff out of 10.",
 };
