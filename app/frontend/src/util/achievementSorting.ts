@@ -174,7 +174,7 @@ function getGrouping(
       return [
         ["*", "Not completed"],
         (a: CompletedAchievementType) =>
-          a.completed
+          a.completed === "complete"
             ? getMyCompletion(a.completions, myTeam)!.player.user.username
             : "Not completed",
         (a: CompletedAchievementType, b: CompletedAchievementType) =>
