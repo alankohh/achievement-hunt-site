@@ -274,7 +274,6 @@ export function WebsocketContextProvider({
     ws.addEventListener("open", () => {
       wsAttempts.current = 0;
       setWsConnected(true);
-      ws.send(JSON.stringify({ code: 3 })); // get submission cooldowns
     });
 
     ws.addEventListener("error", () => {
