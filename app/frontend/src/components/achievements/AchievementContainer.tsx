@@ -41,7 +41,7 @@ function extendAchievementData(
 
     if (isCompetition && completion === null) continue;
 
-    if (completion && completion.is_complete) {
+    if (completion && (completion.is_complete || completion.placement)) {
       achievement.points = calculateScore(
         nTeams,
         achievement.completion_count,
