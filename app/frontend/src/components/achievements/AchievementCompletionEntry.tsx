@@ -180,7 +180,7 @@ export default function AchievementCompletionEntry({
       />
       {players.map((p) => (
         <AchievementCompletionEntryPlayer
-          key={p.player.id}
+          key={`${p.player.id}-${p.part}`}
           releaseTime={releaseTime}
           player={p.player}
           timeFormat={timeFormat}
