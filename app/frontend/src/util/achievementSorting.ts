@@ -85,7 +85,7 @@ function checkFilterCondition(
       return (achievement as StaffAchievementType).staff_solved;
     case "completed": // achievements page
       return "completed" in achievement
-        ? (achievement as CompletedAchievementType).completed
+        ? (achievement as CompletedAchievementType).completed === "complete"
         : false;
     case "upvoted": // staff page
       return (

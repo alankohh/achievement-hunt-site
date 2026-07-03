@@ -159,11 +159,11 @@ export function calculateScore(
 ) {
   if (teams <= 1) return 100;
 
-  completions = Math.max(completions, placement);
-
   if (isCompetition) {
-    return scoringFuncs.p_c(completions, teams);
+    return scoringFuncs.p_c(placement, teams);
   }
+
+  completions = Math.max(completions, placement);
 
   if (isSecret) {
     return scoringFuncs.p_s(placement, completions, teams);

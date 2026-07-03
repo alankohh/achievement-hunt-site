@@ -225,7 +225,7 @@ def achievement_completions(req, iteration):
 def get_effective_team_count(iteration_id):
     return (
         AchievementCompletion.objects.select_related("player", "achievement__batch")
-        .filter(achievement__batch__iteration_id=iteration_id)
+        .filter(achievement__batch__iteration_id=iteration_id, is_complete=True, achievement__worth_points=True)
         .values("player__team_id")
         .distinct()
         .count()

@@ -36,8 +36,11 @@ export default function AchievementPage() {
         <div className="staff__achievement-container">
           <Achievement
             achievement={achievement}
-            completed={null}
+            completed="none"
             points={null}
+            teamsMap={{}}
+            playersMap={{}}
+            iterationEnded={true}
           />
         </div>
       </div>

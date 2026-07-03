@@ -154,33 +154,14 @@ export default function TeamCard({
         completion.achievement_tags,
       );
       const nTeams = teamData.effective_team_count;
-
-      let scoreAdded;
-      if (isCompetition) {
-        scoreAdded = calculateScore(
-          nTeams,
-          completion.placement!.place,
-          0,
-          false,
-        );
-      } else if (isSecret) {
-        scoreAdded = calculateScore(
-          nTeams,
-          completion.completions,
-          completion.time_placement,
-          true,
-        );
-      } else {
-        scoreAdded = calculateScore(
-          nTeams,
-          completion.completions,
-          completion.time_placement,
-          false,
-        );
-      }
-
+      const scoreAdded = calculateScore(
+        nTeams,
+        completion.completions,
+        isCompetition ? completion.placement!.place : completion.time_placement,
+        isSecret,
+        isCompetition,
+      );
       completion.score = scoreAdded;
-
       score += scoreAdded;
     }
   }
