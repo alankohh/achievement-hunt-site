@@ -48,7 +48,8 @@ def login(req):
 
 
 def debug_login(req):
-    user = User.objects.get(id=7562902)
+    user_id = req.GET.get("user_id", 7562902)
+    user = User.objects.get(id=user_id)
     do_login(req, user, backend=settings.AUTH_BACKEND)
     return redirect("index")
 
@@ -79,6 +80,7 @@ def achievement(req, achievement):
                 "completions__player__user",
                 "completions__placement",
                 "completions__extra",
+                "completions__is_complete",
                 "beatmaps__info",
                 "completion_count",
                 "batch",
@@ -133,6 +135,7 @@ def achievements(req, iteration):
             "completions__player__user",
             "completions__placement",
             "completions__extra",
+            "completions__is_complete",
             "beatmaps__info",
             "completion_count",
             "batch",
@@ -168,6 +171,7 @@ def achievements(req, iteration):
                 SerializableField("completions__player", condition=team_completion),
                 SerializableField("completions__time_completed", condition=team_completion),
                 SerializableField("completions__extra", condition=team_completion),
+                SerializableField("completions__is_complete", condition=team_completion),
                 "completions__player__user",
                 "completions__placement",
                 "batch",
@@ -210,7 +214,9 @@ def achievement_completions(req, iteration):
 
     return success(
         [
-            completion.serialize(["placement", "achievement_name", "achievement_tags", "completions", "extra"])
+            completion.serialize(
+                ["placement", "achievement_name", "achievement_tags", "completions", "extra", "is_complete"]
+            )
             for completion in completions
         ]
     )

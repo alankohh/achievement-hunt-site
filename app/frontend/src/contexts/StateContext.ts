@@ -2,7 +2,7 @@ import {
   NavItems,
   SortedNavRowItems,
 } from "components/achievements/AchievementNavigationBar.tsx";
-import { createContext, useContext, useReducer } from "react";
+import { act, createContext, useContext, useReducer } from "react";
 import { AppState, defaultState } from "types/AppStateType.ts";
 
 interface BaseStateActionType {
@@ -49,6 +49,12 @@ interface ChangeSubmissionMode extends BaseStateActionType {
   mode: string;
 }
 
+interface TogglePasswordSubmission extends BaseStateActionType {
+  id: 14;
+  achievementId: number | null;
+  enable: boolean;
+}
+
 type StateActionType =
   | ToggleSubmission
   | FilterType
@@ -56,7 +62,8 @@ type StateActionType =
   | AdjustAudioType
   | ActivateNavItem
   | SwitchNavItemSort
-  | ChangeSubmissionMode;
+  | ChangeSubmissionMode
+  | TogglePasswordSubmission;
 
 function stateReducer(state: AppState, action: StateActionType): AppState {
   switch (action.id) {
@@ -136,6 +143,21 @@ function stateReducer(state: AppState, action: StateActionType): AppState {
         ...state,
         submissionMode: action.mode,
       };
+    case 14: {
+      if (action.achievementId === null) {
+        return {
+          ...state,
+          pwSubmitEnabled: {},
+        };
+      }
+      return {
+        ...state,
+        pwSubmitEnabled: {
+          ...state.pwSubmitEnabled,
+          [action.achievementId]: action.enable,
+        },
+      };
+    }
   }
 }
 

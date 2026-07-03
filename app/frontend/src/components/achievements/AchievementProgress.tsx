@@ -2,7 +2,7 @@ import { useGetAchievements } from "api/query";
 import { AchievementTeamExtendedType } from "api/types/AchievementTeamType";
 import { AchievementExtendedType } from "api/types/AchievementType";
 import { WebsocketContext } from "contexts/WebsocketContext";
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import { EventIterationType } from "api/types/EventIterationType.ts";
 import {
   StateContext,
@@ -34,21 +34,31 @@ export default function AchievementProgress({
 
   const eventEnded: boolean = Date.now() >= Date.parse(iteration.end);
 
-  if (team === null || achievements === undefined) {
-    return <div>Loading team progress...</div>;
-  }
-
   // count number of completed achievements
-  let achievementCount = 0;
-  for (const achievement of achievements) {
-    for (const completion of achievement.completions) {
-      for (const player of team.players) {
-        if ("player" in completion && completion.player.id === player.id) {
-          achievementCount += 1;
-          break;
+  const achievementCount = useMemo(() => {
+    if (!achievements || !team) {
+      return 0;
+    }
+
+    let achievementCount = 0;
+    for (const achievement of achievements) {
+      for (const completion of achievement.completions) {
+        if (!("player" in completion) || !completion.is_complete) {
+          continue;
+        }
+        for (const player of team.players) {
+          if (completion.player.id === player.id) {
+            achievementCount += 1;
+            break;
+          }
         }
       }
     }
+    return achievementCount;
+  }, [achievements, team]);
+
+  if (team === null || achievements === undefined) {
+    return <div>Loading team progress...</div>;
   }
 
   const submitDisabled =

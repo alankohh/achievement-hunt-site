@@ -6,7 +6,6 @@ import { AchievementExtendedType } from "api/types/AchievementType";
 import {
   createContext,
   ReactNode,
-  use,
   useCallback,
   useContext,
   useEffect,
@@ -16,7 +15,11 @@ import {
 import { timeAgo } from "util/helperFunctions";
 import { EventContext, EventType } from "./EventContext";
 import { SessionContext } from "./SessionContext";
-import { useDispatchStateContext, useStateContext } from "./StateContext";
+import {
+  StateDispatch,
+  useDispatchStateContext,
+  useStateContext,
+} from "./StateContext";
 
 export type ChatMessage = {
   name: string;
@@ -27,10 +30,13 @@ export type ChatMessage = {
 type WSAchievementType = {
   id: number;
   name: string;
-  category: string;
+  parts: number;
+  completed_parts: number;
   time: string;
-  placement: AchievementCompletionPlacementType | null;
   time_placement: number;
+  placement: AchievementCompletionPlacementType | null;
+  extra: Record<string, any>;
+  is_complete: boolean;
 };
 
 type RefreshReturnType = {
@@ -41,6 +47,11 @@ type RefreshReturnType = {
   score_gain: number;
 };
 
+type CooldownsReturnType = {
+  ends_at: number | null;
+  achievements: { [achievementId: string]: number };
+};
+
 function onCompletedAchievement(
   data: RefreshReturnType,
   queryClient: QueryClient,
@@ -49,33 +60,37 @@ function onCompletedAchievement(
   queryClient.setQueryData(
     ["achievements"],
     (achievements: AchievementExtendedType[]) => {
-      for (const completed of data.achievements) {
-        for (const achievement of achievements) {
-          if (achievement.id === completed.id) {
-            // remove existing entry (for competition achievements)
-            achievement.completions = achievement.completions.filter(
-              (c) => !("player" in c),
-            );
+      const newAchievements = [];
+      for (const achievement of achievements) {
+        const completedAch = data.achievements
+          .filter((a) => a.id === achievement.id)
+          .pop();
+        if (completedAch === undefined) {
+          newAchievements.push(achievement);
+          continue;
+        }
 
-            achievement.completion_count += 1;
-            achievement.completions.push({
-              time_completed: completed.time,
-              time_placement: completed.time_placement,
+        newAchievements.push({
+          ...achievement,
+          completions: [
+            {
+              time_completed: completedAch.time,
+              time_placement: completedAch.time_placement,
               player: data.player,
               placement:
-                completed.placement === null ||
-                completed.placement === undefined ||
-                completed.placement.value === null
+                completedAch.placement === null ||
+                completedAch.placement === undefined ||
+                completedAch.placement.value === null
                   ? undefined
-                  : completed.placement,
-            });
-
-            break;
-          }
-        }
+                  : completedAch.placement,
+              extra: completedAch.extra,
+              is_complete: completedAch.is_complete,
+            },
+          ],
+        });
       }
 
-      return achievements;
+      return newAchievements;
     },
   );
 
@@ -108,6 +123,8 @@ function handleMessage(
   evt: MessageEvent<string>,
   dispatchEventMsg: React.Dispatch<{ type: EventType; msg: string }>,
   queryClient: QueryClient,
+  ws: WebSocket,
+  dispatchAppState: StateDispatch,
 ) {
   const data = JSON.parse(evt.data);
   if (data.error !== undefined) {
@@ -123,9 +140,13 @@ function handleMessage(
       const achievements = data.achievements as WSAchievementType[];
       let msg =
         achievements.length === 0
-          ? "No achievements completed."
+          ? "No achievements completed. Submission on cooldown."
           : `You completed ${achievements.length} achievement(s)! ${achievements
-              .map((achievement) => achievement.name)
+              .map((achievement) =>
+                achievement.parts === 1
+                  ? achievement.name
+                  : `${achievement.name} (${achievement.completed_parts}/${achievement.parts})`,
+              )
               .join(", ")}.`;
 
       if (data.last_score !== undefined) {
@@ -134,11 +155,19 @@ function handleMessage(
           (data.last_score === null ? "no scores" : timeAgo(data.last_score));
       }
 
+      msg = `${data.player.user.username}: ${msg}`;
+
       dispatchEventMsg({ type: "info", msg: msg });
 
       if (achievements.length > 0) {
         onCompletedAchievement(data, queryClient);
       }
+
+      ws.send(
+        JSON.stringify({
+          code: 3,
+        }),
+      ); // get submission cooldowns
 
       break;
     }
@@ -156,6 +185,41 @@ function handleMessage(
           return [...messages, data.msg];
         },
       );
+
+      break;
+    }
+    case 3: {
+      // set cooldowns on submission (score + passwords)
+      const cooldowns = data as CooldownsReturnType;
+      if (cooldowns.ends_at !== null) {
+        dispatchAppState({ id: 3, enable: false });
+        setTimeout(
+          () => dispatchAppState({ id: 3, enable: true }),
+          Math.max(0, cooldowns.ends_at * 1000 - Date.now()),
+        );
+      }
+      // enable all, then disable the ones on cooldown
+      dispatchAppState({ id: 14, achievementId: null, enable: true });
+      for (const [achievementId, endsAt] of Object.entries(
+        cooldowns.achievements,
+      )) {
+        dispatchAppState({
+          id: 14,
+          achievementId: parseInt(achievementId),
+          enable: false,
+        });
+        setTimeout(
+          () =>
+            dispatchAppState({
+              id: 14,
+              achievementId: parseInt(achievementId),
+              enable: true,
+            }),
+          Math.max(0, endsAt * 1000 - Date.now()),
+        );
+      }
+
+      break;
     }
   }
 }
@@ -167,6 +231,7 @@ export type WebsocketState = {
 export type WebsocketContextType = {
   state: WebsocketState;
   sendSubmit: () => void;
+  sendPwGuess: (achievementId: number, guess: string) => void;
   sendChatMessage: (msg: string) => void;
   resetConnection: () => void;
 } | null;
@@ -209,6 +274,7 @@ export function WebsocketContextProvider({
     ws.addEventListener("open", () => {
       wsAttempts.current = 0;
       setWsConnected(true);
+      ws.send(JSON.stringify({ code: 3 })); // get submission cooldowns
     });
 
     ws.addEventListener("error", () => {
@@ -228,9 +294,9 @@ export function WebsocketContextProvider({
     });
 
     ws.addEventListener("message", (evt) => {
-      handleMessage(evt, dispatchEventMsg, queryClient);
+      handleMessage(evt, dispatchEventMsg, queryClient, ws, dispatchAppState);
     });
-  }, [session.wsUri, dispatchEventMsg, queryClient]);
+  }, [session.wsUri, dispatchEventMsg, queryClient, dispatchAppState]);
 
   const wsReady = useCallback(() => {
     return (
@@ -247,18 +313,34 @@ export function WebsocketContextProvider({
       JSON.stringify({ code: 1, mode: appState.submissionMode }),
     );
 
-    // disable submission for 5 seconds
+    // disable submission
     dispatchAppState({
       id: 3,
       enable: false,
     });
-    setTimeout(() => {
-      dispatchAppState({
-        id: 3,
-        enable: true,
-      });
-    }, 60000);
   }, [appState.submitEnabled, appState.submissionMode]);
+
+  const sendPwGuess = useCallback((achievementId: number, guess: string) => {
+    if (!wsReady()) {
+      return;
+    }
+
+    wsRef.current!.send(
+      JSON.stringify({
+        code: 1,
+        mode: appState.submissionMode,
+        achievement: achievementId,
+        guess,
+      }),
+    );
+
+    // disable submission
+    dispatchAppState({
+      id: 14,
+      achievementId,
+      enable: false,
+    });
+  }, []);
 
   const sendChatMessage = useCallback(
     (msg: string) => {
@@ -284,6 +366,7 @@ export function WebsocketContextProvider({
           connected: wsConnected,
         },
         sendSubmit,
+        sendPwGuess,
         sendChatMessage,
         resetConnection,
       }}

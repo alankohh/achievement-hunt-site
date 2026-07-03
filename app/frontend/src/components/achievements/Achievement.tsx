@@ -1,6 +1,7 @@
 import { AchievementCompletionType } from "api/types/AchievementCompletionType.ts";
 import {
   AchievementExtendedType,
+  CompletionProgressType,
   OTHER_DESCRIPTIONS,
   TAG_DESCRIPTIONS,
 } from "api/types/AchievementType";
@@ -11,6 +12,7 @@ import { parseTags, toTitleCase } from "util/helperFunctions";
 import React, {
   MouseEventHandler,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -21,6 +23,10 @@ import Button from "components/inputs/Button.tsx";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import TextInput from "components/inputs/TextInput.tsx";
+import { WebsocketContext } from "contexts/WebsocketContext.tsx";
+import { AchievementPlayerType } from "api/types/AchievementPlayerType.ts";
+import { AchievementTeamExtendedType } from "api/types/AchievementTeamType.ts";
+import { useStateContext } from "contexts/StateContext.ts";
 
 function getTagDescription(tag: string) {
   const i = tag.indexOf(":");
@@ -42,18 +48,28 @@ export default function Achievement({
   achievement,
   completed,
   points,
+  playersMap,
+  teamsMap,
+  iterationEnded,
 }: {
   achievement: AchievementExtendedType;
-  completed: boolean | null;
+  completed: CompletionProgressType;
   points: number | null;
+  playersMap: { [playerId: number]: AchievementPlayerType };
+  teamsMap: { [playerId: number]: AchievementTeamExtendedType };
+  iterationEnded: boolean;
 }) {
   const [showCompletions, setShowCompletions] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
   const popupRef = useRef<null | HTMLDivElement>(null);
 
+  const wsCtx = useContext(WebsocketContext);
+  const appState = useStateContext();
+
   const completions = achievement.completions;
   const tags = useMemo(() => parseTags(achievement.tags), [achievement.tags]);
   const hasPasswordTag = useMemo(() => tags.includes("password"), [tags]);
+  const hasCompetitionTag = useMemo(() => tags.includes("competition"), [tags]);
   const tagsWithExtra = useMemo(() => {
     const extra = [`Completions: ${achievement.completion_count}`];
     if (achievement.avg_difficulty_rating !== null) {
@@ -65,12 +81,16 @@ export default function Achievement({
   }, [achievement.completion_count, achievement.avg_difficulty_rating, tags]);
 
   const infoCls = useMemo(() => {
-    if (completed === null) {
-      return "achievement__container neutral";
-    } else if (completed) {
-      return "achievement__container complete";
+    switch (completed) {
+      case "none":
+        return "achievement__container neutral";
+      case "complete":
+        return "achievement__container complete";
+      case "incomplete":
+        return "achievement__container incomplete";
+      case "partial":
+        return "achievement__container partial";
     }
-    return "achievement__container incomplete";
   }, [completed]);
 
   const dropdownArrowProps = useMemo(
@@ -105,11 +125,26 @@ export default function Achievement({
     [popupRef.current, TAG_DESCRIPTIONS],
   );
 
-  const onPasswordSubmitted = useCallback((e: React.SubmitEvent) => {
-    e.preventDefault();
+  const submitEnabled = useMemo(() => {
+    const enabled = appState.pwSubmitEnabled[achievement.id];
+    return enabled === undefined ? true : enabled;
+  }, [appState.pwSubmitEnabled]);
 
-    // TODO
-  }, []);
+  const onPasswordSubmitted = useCallback(
+    (e: React.SubmitEvent) => {
+      e.preventDefault();
+
+      if (completed === "complete" || !submitEnabled) {
+        return;
+      }
+
+      if (wsCtx) {
+        const data = new FormData(e.target);
+        wsCtx.sendPwGuess(achievement.id, data.get("guess") as string);
+      }
+    },
+    [achievement.id, wsCtx, completed, submitEnabled],
+  );
 
   useEffect(() => {
     const onClick = (evt: PointerEvent) => {
@@ -162,6 +197,18 @@ export default function Achievement({
     }
     return achievement.beatmaps.filter((b) => !b.hide);
   }, [showSolution, achievement.beatmaps]);
+
+  const sortedCompletions = useMemo(
+    () =>
+      completions.sort(
+        hasCompetitionTag
+          ? (a, b) => a.placement!.place - b.placement!.place
+          : (a, b) =>
+              Date.parse((a as AchievementCompletionType).time_completed) -
+              Date.parse((b as AchievementCompletionType).time_completed),
+      ),
+    [hasCompetitionTag, completions],
+  );
 
   return (
     <>
@@ -217,7 +264,7 @@ export default function Achievement({
                 <Button
                   children="Submit"
                   type="submit"
-                  unavailable={completed ?? false}
+                  unavailable={completed == "complete" || !submitEnabled}
                 />
               </form>
             )}
@@ -306,22 +353,16 @@ export default function Achievement({
           ""
         ) : (
           <div className="achievement__players">
-            {completions
-              .sort((a, b) =>
-                a.placement === undefined || a.placement === null
-                  ? Date.parse(
-                      (a as AchievementCompletionType).time_completed,
-                    ) -
-                    Date.parse((b as AchievementCompletionType).time_completed)
-                  : a.placement!.place - b.placement!.place,
-              )
-              .map((completion, i) => (
-                <AchievementCompletionEntry
-                  key={i}
-                  completion={completion}
-                  releaseTime={achievement.batch!.release_time}
-                />
-              ))}
+            {sortedCompletions.map((completion, i) => (
+              <AchievementCompletionEntry
+                key={i}
+                completion={completion}
+                releaseTime={achievement.batch!.release_time}
+                playersMap={playersMap}
+                teamsMap={teamsMap}
+                timeFormat={iterationEnded ? "since-release" : "normal"}
+              />
+            ))}
           </div>
         )}
       </div>

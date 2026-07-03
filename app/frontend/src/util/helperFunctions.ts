@@ -122,29 +122,54 @@ export function getMyCompletion(
   return null;
 }
 
-const c0 = -Math.atanh(0.7);
-const c1 = Math.atanh(0.97);
+const scoringFuncs = (() => {
+  const c0 = -Math.atanh(0.7);
+  const c1 = Math.atanh(0.97);
+
+  const a = (x: number) => (1 - Math.tanh(x)) / 2;
+  const b = (x: number) => (a((c1 - c0) * x + c0) - a(c1)) / (a(c0) - a(c1));
+  const f = (completions: number, teams: number) =>
+    10 + 90 * Math.pow(b((completions - 1) / (teams - 1)), 2);
+  const g = (timeBucket: number, completions: number, teams: number) =>
+    10 +
+    20 * Math.pow(b((timeBucket - 1) / (teams - 1)), 2) +
+    70 * Math.pow(b((completions - 1) / (teams - 1)), 2);
+  const h = (placement: number, teams: number) =>
+    10 + 90 * Math.pow(b((placement - 1) / (teams - 1)), 3);
+  const p = (completions: number, teams: number) =>
+    Math.round(Math.max(f(completions, teams), 10));
+  const p_s = (timeBucket: number, completions: number, teams: number) =>
+    Math.round(Math.max(g(timeBucket, completions, teams), 10));
+  const p_c = (completions: number, teams: number) =>
+    Math.round(Math.max(h(completions, teams), 10));
+
+  return {
+    p,
+    p_s,
+    p_c,
+  };
+})();
 
 export function calculateScore(
   teams: number,
   completions: number,
-  timePlacement: number,
+  placement: number, // time or competition placement
   isSecret: boolean,
+  isCompetition: boolean,
 ) {
-  if (teams == 1) return 100;
+  if (teams <= 1) return 100;
 
-  const a = (x: number) => (1 - Math.tanh(x)) / 2;
-  const b = (x: number) => (a((c1 - c0) * x + c0) - a(c1)) / (a(c0) - a(c1));
-  const f = (x: number) => 10 + 90 * b(x / (teams - 1));
-  const p = (x: number) => Math.max(f(x - 1), f(teams - 1));
-  const s = (x: number) =>
-    (Math.cos((4 * Math.PI * (x - 1)) / (5 * teams)) + 1) / 2;
+  completions = Math.max(completions, placement);
 
-  if (isSecret) {
-    return Math.max(Math.round(p(timePlacement) * s(completions)), 10);
+  if (isCompetition) {
+    return scoringFuncs.p_c(completions, teams);
   }
 
-  return Math.round(p(completions));
+  if (isSecret) {
+    return scoringFuncs.p_s(placement, completions, teams);
+  }
+
+  return scoringFuncs.p(completions, teams);
 }
 
 export function parseMeaningfulTags(tagsString: string): boolean[] {

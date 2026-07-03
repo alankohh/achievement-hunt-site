@@ -34,8 +34,13 @@ export type AchievementExtendedType = {
   )[];
 } & AchievementType;
 
+export type CompletionProgressType =
+  | "incomplete"
+  | "complete"
+  | "partial"
+  | "none";
 export type CompletedAchievementType = AchievementExtendedType & {
-  completed: boolean;
+  completed: CompletionProgressType;
   points: number | null;
 };
 

@@ -30,8 +30,14 @@ function HiddenAchievementCompletionPage({
   );
 }
 
-function LimitedAchievementCompletionPage({ state }: { state: AppState }) {
-  return <AchievementContainer state={state} />;
+function LimitedAchievementCompletionPage({
+  state,
+  iteration,
+}: {
+  state: AppState;
+  iteration: EventIterationType;
+}) {
+  return <AchievementContainer state={state} iteration={iteration} />;
 }
 
 function FullAchievementCompletionPage({
@@ -46,7 +52,7 @@ function FullAchievementCompletionPage({
   return (
     <>
       <AchievementProgress team={team} iteration={iteration} />
-      <AchievementContainer state={state} />
+      <AchievementContainer state={state} iteration={iteration} />
     </>
   );
 }
@@ -80,15 +86,12 @@ export default function AchievementCompletionPage() {
     }
 
     if (Date.now() >= iterationStart) {
-      console.log("ok");
       setShowContent(true);
       return;
     }
 
-    console.log(iterationStart - Date.now());
     const timeoutId = setTimeout(
       () => {
-        console.log("aaa");
         setShowContent(true);
       },
       Math.min(iterationStart - Date.now(), 2147483647),
@@ -205,7 +208,10 @@ export default function AchievementCompletionPage() {
               iteration={iteration}
             />
           ) : (
-            <LimitedAchievementCompletionPage state={state} />
+            <LimitedAchievementCompletionPage
+              state={state}
+              iteration={iteration}
+            />
           )}
         </div>
       </div>

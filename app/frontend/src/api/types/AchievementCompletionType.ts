@@ -5,7 +5,16 @@ export type AchievementCompletionType = {
   time_placement: number;
   player: AchievementPlayerType;
   placement?: AchievementCompletionPlacementType | null;
-  extra: Record<string, any>;
+  extra: {
+    parts: {
+      [part: string]: {
+        player: number;
+        timestamp: string;
+        value?: number;
+      };
+    };
+  } | null;
+  is_complete: boolean;
 };
 
 export type AnonymousAchievementCompletionType = {
