@@ -148,7 +148,7 @@ def achievements(req, iteration):
             return 1
         return (
             completion.time_placement
-            if (datetime.now(tz=timezone.utc) - completion.time_completed).total_seconds() <= 5 * 60
+            if (datetime.now(tz=timezone.utc) - completion.time_completed).total_seconds() <= 30 * 60
             else completion.time_placement + 1
         )
 
