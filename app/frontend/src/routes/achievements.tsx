@@ -216,11 +216,11 @@ export default function AchievementCompletionPage() {
             finishedText="Event ended"
           />
         </div>
-        {nextBatchAt !== null ? (
+        {nextBatchAt !== null && nextBatchAt !== iterationEnd ? (
           <div style={{ margin: "auto", textAlign: "center" }}>
             <Timer
               endsAt={nextBatchAt!}
-              preText="Next batch in "
+              preText="Next batch in"
               finishedText="Batch released"
             />
           </div>
