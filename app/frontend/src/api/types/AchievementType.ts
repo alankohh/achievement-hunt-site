@@ -24,6 +24,7 @@ export type AchievementType = {
   avg_difficulty_rating: number | null;
   solution?: string;
   creator?: { id: number; username: string } | null;
+  time_placement?: number; // on /achievements endpoint
 };
 
 export type AchievementExtendedType = {
@@ -98,6 +99,6 @@ export const OTHER_DESCRIPTIONS = {
       "This achievement is possible in, or requires, multiple game modes, but not necessarily all of them.",
   },
   completions:
-    "This shows the number of teams that have completed the achievement.",
+    "This shows the number of teams that have completed the achievement. This number updates infrequently by design.",
   difficulty: "This shows the average difficulty rated by the staff out of 10.",
 };

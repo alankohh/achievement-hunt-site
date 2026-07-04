@@ -57,7 +57,7 @@ function extendAchievementData(
       achievement.points = calculateScore(
         nTeams,
         achievement.completion_count,
-        achievement.completion_count + 1, // TODO: fix to be accurate (?)
+        achievement.time_placement!, // guaranteed at /achievements endpoint
         isSecret,
         isCompetition,
       );

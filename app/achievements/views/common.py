@@ -124,9 +124,33 @@ def achievements(req, iteration):
     )
     beatmaps_prefetch = models.Prefetch("beatmaps", queryset=BeatmapConnection.objects.select_related("info"))
 
-    query = Achievement.objects.select_related("batch", "creator").filter(
-        batch__iteration_id=iteration.id, batch__release_time__lte=datetime.now(tz=timezone.utc)
+    query = (
+        Achievement.objects.select_related("batch", "creator")
+        .filter(batch__iteration_id=iteration.id, batch__release_time__lte=datetime.now(tz=timezone.utc))
+        .prefetch_related(
+            models.Prefetch(
+                "completions",
+                queryset=AchievementCompletion.objects.filter(
+                    id=models.Subquery(
+                        AchievementCompletion.objects.filter(achievement_id=models.OuterRef("achievement_id"))
+                        .order_by("-time_completed")
+                        .values("id")[:1]
+                    )
+                ),
+                to_attr="time_placement",
+            ),
+        )
     )
+
+    def last_completion_transform(completion):
+        completion = completion[0] if len(completion) == 1 else None
+        if completion is None:
+            return 1
+        return (
+            completion.time_placement
+            if (datetime.now(tz=timezone.utc) - completion.time_completed).total_seconds() <= 5 * 60
+            else completion.time_placement + 1
+        )
 
     is_staff = req.user.is_authenticated and req.user.is_staff
     if is_staff or iteration_ended:
@@ -139,6 +163,7 @@ def achievements(req, iteration):
             "beatmaps__info",
             "completion_count",
             "batch",
+            SerializableField("time_placement", post_transform=last_completion_transform),
         ]
         excludes = [
             "completions__player__team_admin",
@@ -176,6 +201,7 @@ def achievements(req, iteration):
                 "completions__placement",
                 "batch",
                 "completion_count",
+                SerializableField("time_placement", post_transform=last_completion_transform),
             ],
             [
                 "completions__player__team_admin",
