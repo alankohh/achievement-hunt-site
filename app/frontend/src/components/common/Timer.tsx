@@ -23,7 +23,7 @@ export function Timer({
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      setTimeLeft(endsAt - Date.now());
+      setTimeLeft(Math.max(0, endsAt - Date.now()));
     }, 100);
     return () => clearInterval(intervalId);
   }, [endsAt]);

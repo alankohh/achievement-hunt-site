@@ -12,7 +12,7 @@ import {
   useDispatchStateContext,
   useStateContext,
 } from "contexts/StateContext.ts";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
 import { AppState } from "types/AppStateType.ts";
 import { getMyTeam } from "util/helperFunctions";
@@ -120,6 +120,31 @@ export default function AchievementCompletionPage() {
     return () => clearTimeout(timeoutId);
   }, [iterationEnd]);
 
+  const getNextbatchAt = useCallback(() => {
+    if (iterationStart === null || iterationStart >= Date.now()) {
+      return null;
+    }
+
+    const interval = 16 * 60 * 60 * 1000;
+    const nextBatch = Math.ceil((Date.now() - iterationStart) / interval);
+    return iterationStart + interval * nextBatch;
+  }, [iterationStart]);
+  const [nextBatchAt, setNextBatchAt] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (nextBatchAt === null) {
+      if (iterationStart !== null) {
+        setNextBatchAt(getNextbatchAt);
+      }
+      return;
+    }
+    const timeoutId = setTimeout(
+      () => setNextBatchAt(getNextbatchAt),
+      Math.max(nextBatchAt - Date.now(), 0) + 1000,
+    );
+    return () => clearTimeout(timeoutId);
+  }, [iterationStart, nextBatchAt, getNextbatchAt]);
+
   const { data: teamData, isLoading: teamsLoading } = useGetTeams(showContent);
   const team = useMemo(
     () =>
@@ -191,6 +216,17 @@ export default function AchievementCompletionPage() {
             finishedText="Event ended"
           />
         </div>
+        {nextBatchAt !== null ? (
+          <div style={{ margin: "auto", textAlign: "center" }}>
+            <Timer
+              endsAt={nextBatchAt!}
+              preText="Next batch in "
+              finishedText="Batch released"
+            />
+          </div>
+        ) : (
+          ""
+        )}
 
         <AchievementNavigationBar
           key="achievements"
