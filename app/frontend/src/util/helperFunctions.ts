@@ -122,7 +122,7 @@ export function getMyCompletion(
   return null;
 }
 
-const scoringFuncs = (() => {
+export const scoringFuncs = (() => {
   const c0 = -Math.atanh(0.7);
   const c1 = Math.atanh(0.97);
 
@@ -140,8 +140,8 @@ const scoringFuncs = (() => {
     Math.round(Math.max(f(completions, teams), 10));
   const p_s = (timeBucket: number, completions: number, teams: number) =>
     Math.round(Math.max(g(timeBucket, completions, teams), 10));
-  const p_c = (completions: number, teams: number) =>
-    Math.round(Math.max(h(completions, teams), 10));
+  const p_c = (placement: number, teams: number) =>
+    Math.round(Math.max(h(placement, teams), 10));
 
   return {
     p,
@@ -170,6 +170,14 @@ export function calculateScore(
   }
 
   return scoringFuncs.p(completions, teams);
+}
+
+export function getCompetitionScorings(teams: number): number[] {
+  const scorings = [];
+  for (let i = 1; i <= teams; i++) {
+    scorings.push(scoringFuncs.p_c(i, teams));
+  }
+  return scorings;
 }
 
 export function parseMeaningfulTags(tagsString: string): boolean[] {

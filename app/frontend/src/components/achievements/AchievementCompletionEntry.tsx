@@ -85,11 +85,13 @@ function AchievementCompletionEntryTeam({
   releaseTime,
   teamsMap,
   timeFormat,
+  competitionScorings,
 }: {
   completion: AchievementCompletionType | AnonymousAchievementCompletionType;
   releaseTime: string;
   teamsMap: { [playerId: number]: AchievementTeamExtendedType };
   timeFormat: "since-release" | "normal";
+  competitionScorings: number[];
 }) {
   const timeText = useMemo(
     () =>
@@ -105,14 +107,29 @@ function AchievementCompletionEntryTeam({
     [completion],
   );
 
+  const [placement, placeValue] = useMemo(
+    () =>
+      "placement" in completion &&
+      completion.placement !== null &&
+      completion.placement !== undefined
+        ? [completion.placement!.place, completion.placement!.value]
+        : [null, null],
+    [completion, completion.placement],
+  );
+  const points = useMemo(
+    () =>
+      placement !== null && competitionScorings.length >= placement
+        ? competitionScorings[placement - 1]
+        : null,
+    [placement, competitionScorings],
+  );
+
   return (
     <div className="achievement__players__entry">
-      {"placement" in completion &&
-      completion.placement !== null &&
-      completion.placement !== undefined ? (
+      {placement !== null ? (
         <>
-          <p className="placement-text place">#{completion.placement!.place}</p>
-          <p className="placement-text value">{completion.placement!.value}</p>
+          <p className="placement-text place">#{placement}</p>
+          <p className="placement-text value">{placeValue}</p>
         </>
       ) : (
         ""
@@ -129,6 +146,16 @@ function AchievementCompletionEntryTeam({
       ) : (
         ""
       )}
+      {points !== null ? (
+        <>
+          <div style={{ flexGrow: 1 }}></div>
+          <p>
+            <b>{points}pts</b>
+          </p>
+        </>
+      ) : (
+        ""
+      )}
     </div>
   );
 }
@@ -139,12 +166,14 @@ export default function AchievementCompletionEntry({
   playersMap,
   teamsMap,
   timeFormat,
+  competitionScorings,
 }: {
   completion: AchievementCompletionType | AnonymousAchievementCompletionType;
   releaseTime: string;
   playersMap: { [playerId: number]: AchievementPlayerType };
   teamsMap: { [playerId: number]: AchievementTeamExtendedType };
   timeFormat: "since-release" | "normal";
+  competitionScorings: number[];
 }) {
   const players = useMemo(() => {
     if ("extra" in completion && completion.extra !== null) {
@@ -177,6 +206,7 @@ export default function AchievementCompletionEntry({
         releaseTime={releaseTime}
         teamsMap={teamsMap}
         timeFormat={timeFormat}
+        competitionScorings={competitionScorings}
       />
       {players.map((p) => (
         <AchievementCompletionEntryPlayer

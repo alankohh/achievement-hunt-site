@@ -51,6 +51,7 @@ export default function Achievement({
   playersMap,
   teamsMap,
   iterationEnded,
+  competitionScorings,
 }: {
   achievement: AchievementExtendedType;
   completed: CompletionProgressType;
@@ -58,6 +59,7 @@ export default function Achievement({
   playersMap: { [playerId: number]: AchievementPlayerType };
   teamsMap: { [playerId: number]: AchievementTeamExtendedType };
   iterationEnded: boolean;
+  competitionScorings: number[];
 }) {
   const [showCompletions, setShowCompletions] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
@@ -193,9 +195,11 @@ export default function Achievement({
 
   const beatmapsToShow = useMemo(() => {
     if (showSolution) {
-      return achievement.beatmaps;
+      return achievement.beatmaps.sort((a, b) => a.info.id - b.info.id);
     }
-    return achievement.beatmaps.filter((b) => !b.hide);
+    return achievement.beatmaps
+      .filter((b) => !b.hide)
+      .sort((a, b) => a.info.id - b.info.id);
   }, [showSolution, achievement.beatmaps]);
 
   const sortedCompletions = useMemo(
@@ -361,6 +365,7 @@ export default function Achievement({
                 playersMap={playersMap}
                 teamsMap={teamsMap}
                 timeFormat={iterationEnded ? "since-release" : "normal"}
+                competitionScorings={competitionScorings}
               />
             ))}
           </div>

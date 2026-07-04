@@ -11,9 +11,11 @@ import { AppState } from "types/AppStateType.ts";
 import { getSortedAchievements } from "util/achievementSorting.ts";
 import {
   calculateScore,
+  getCompetitionScorings,
   getMyCompletion,
   getMyTeam,
   parseMeaningfulTags,
+  scoringFuncs,
 } from "util/helperFunctions.ts";
 import Achievement from "./Achievement";
 import { AchievementPlayerType } from "api/types/AchievementPlayerType.ts";
@@ -141,6 +143,12 @@ export default function AchievementContainer({
     myTeam,
   ]);
 
+  const competitionScorings = useMemo(
+    () =>
+      !teamData ? [] : getCompetitionScorings(teamData.effective_team_count),
+    [teamData?.effective_team_count],
+  );
+
   if (
     state.achievementsFilter === null ||
     sortedAchievements === null ||
@@ -172,6 +180,7 @@ export default function AchievementContainer({
                 playersMap={playersMap!}
                 teamsMap={teamsMap!}
                 iterationEnded={iterationEnded}
+                competitionScorings={competitionScorings}
               />
             ))
           )}

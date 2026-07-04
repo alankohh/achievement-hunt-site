@@ -41,6 +41,7 @@ export default function AchievementPage() {
             teamsMap={{}}
             playersMap={{}}
             iterationEnded={true}
+            competitionScorings={[]}
           />
         </div>
       </div>
