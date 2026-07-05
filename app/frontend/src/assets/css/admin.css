@@ -16,7 +16,7 @@
   gap: 10px;
 }
 
-.card--announcement__container {
+.card--admin__container {
   display: flex;
   flex-direction: column;
   gap: 5px;

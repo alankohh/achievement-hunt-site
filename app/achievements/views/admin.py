@@ -7,6 +7,7 @@ from django.contrib.auth import login as do_login
 from django.shortcuts import redirect
 from django.http.response import HttpResponse
 from django.conf import settings
+from django.db import connection
 
 from common.validation import *
 from .util import *
@@ -113,3 +114,42 @@ def get_screening_info(req, iteration):
 def update_iteration_cache(req):
     update_current_iteration()
     return HttpResponse("ok")
+
+
+@require_http_methods(["DELETE"])
+@require_admin
+@accepts_json_data(
+    DictionaryType(
+        {
+            "player_id": IntegerType(),
+            "achievement_id": IntegerType(),
+            "blacklist_scores": ListType(IntegerType()),
+        }
+    )
+)
+def remove_completion(req, data):
+    completion = AchievementCompletion.objects.filter(
+        player_id=data["player_id"], achievement_id=data["achievement_id"]
+    ).first()
+    if not completion:
+        return error("Player does not have a completion on that achievement")
+
+    blacklist_scores = data["blacklist_scores"]
+    if len(blacklist_scores) > 0:
+        cursor = connection.cursor()
+        cursor.execute("""SELECT blacklisted_scores FROM score_blacklist WHERE player_id = %s""", [data["player_id"]])
+        blacklist = cursor.fetchone()
+        if not blacklist:
+            cursor.execute(
+                """INSERT INTO score_blacklist (player_id, blacklisted_scores) VALUES (%s, %s)""",
+                [data["player_id"], json.dumps(blacklist_scores)],
+            )
+        else:
+            cursor.execute(
+                """UPDATE score_blacklist SET blacklisted_scores = %s WHERE player_id = %s""",
+                (json.dumps(json.loads(blacklist[0]) + blacklist_scores), data["player_id"]),
+            )
+
+    completion.delete()
+
+    return success({})

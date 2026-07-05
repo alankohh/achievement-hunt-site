@@ -1129,3 +1129,14 @@ export function useSubmitPasswordGuess(
     },
   );
 }
+
+export function useDeleteCompletion(): SpecificUseMutationResult<{}> {
+  return useMakeMutation(
+    {
+      mutationKey: ["admin", "completions", "delete"],
+    },
+    {
+      method: "DELETE",
+    },
+  );
+}

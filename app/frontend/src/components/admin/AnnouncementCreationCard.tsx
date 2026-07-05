@@ -35,7 +35,7 @@ export default function AnnouncementCreationCard() {
   return (
     <div className="card">
       <h1 className="card__title">Make Announcement</h1>
-      <div className="card--announcement__container">
+      <div className="card--admin__container">
         <TextInput
           className="staff__text-input"
           placeholder="Type title here"
@@ -52,6 +52,7 @@ export default function AnnouncementCreationCard() {
           children="Send"
           holdToUse={true}
           onClick={doCreateAnnouncement}
+          width="100%"
         />
       </div>
     </div>

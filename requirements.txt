@@ -2,7 +2,7 @@ django==6.0.6
 django-extensions==4.1
 python-dotenv==1.0.1
 requests==2.32.5
-osu.py==4.3.0
+osu.py==4.3.1
 whitenoise[brotli]==6.7.0
 PyNaCl==1.5.0
 psycopg[binary]==3.1.18
