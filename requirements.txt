@@ -2,7 +2,7 @@ django==6.0.6
 django-extensions==4.1
 python-dotenv==1.0.1
 requests==2.32.5
-osu.py @ git+https://github.com/sheppsu/osu.py@e5d20ff268f1fab2c983a71daa31c58c779e109f
+osu.py==4.3.0
 whitenoise[brotli]==6.7.0
 PyNaCl==1.5.0
 psycopg[binary]==3.1.18
