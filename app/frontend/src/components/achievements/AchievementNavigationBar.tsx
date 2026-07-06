@@ -62,6 +62,7 @@ export function getDefaultNav(
         { label: "player", active: false },
         { label: "date completed", active: false },
         { label: "release", active: false },
+        { label: "difficulty", active: false },
       ];
 
   const modes: NavItem[] = [

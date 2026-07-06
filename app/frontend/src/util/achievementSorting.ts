@@ -241,7 +241,7 @@ function getGrouping(
       return [
         ["*"],
         () => "values",
-        (a: StaffAchievementType, b: StaffAchievementType) =>
+        (a: AchievementType, b: AchievementType) =>
           (a.avg_difficulty_rating ?? 0) - (b.avg_difficulty_rating ?? 0),
       ];
     case "quality":
