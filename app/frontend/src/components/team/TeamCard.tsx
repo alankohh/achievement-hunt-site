@@ -150,6 +150,10 @@ export default function TeamCard({
     score = 0;
 
     for (const completion of extendedCompletions) {
+      if (!completion.is_complete && completion.placement !== null) {
+        continue;
+      }
+
       const [isCompetition, isSecret] = parseMeaningfulTags(
         completion.achievement_tags,
       );
