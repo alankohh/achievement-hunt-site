@@ -229,7 +229,7 @@ def achievement_completions(req, iteration):
     completions = (
         AchievementCompletion.objects.select_related("achievement", "placement")
         .annotate(achievement_name=models.F("achievement__name"), achievement_tags=models.F("achievement__tags"))
-        .filter(player_id__in=player_ids, achievement__worth_points=True)
+        .filter(player_id__in=player_ids, achievement__worth_points=True, is_complete=True)
     )
 
     achievement_ids = [completion.achievement_id for completion in completions]
