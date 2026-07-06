@@ -150,7 +150,7 @@ export default function TeamCard({
     score = 0;
 
     for (const completion of extendedCompletions) {
-      if (!completion.is_complete && completion.placement !== null) {
+      if (!completion.is_complete && completion.placement === null) {
         continue;
       }
 
