@@ -1,6 +1,9 @@
-import { useGetAchievements, useGetTeams } from "api/query";
-import { AchievementTeamExtendedType } from "api/types/AchievementTeamType.ts";
 import {
+  AchievementTeamExtendedType,
+  TeamDataType,
+} from "api/types/AchievementTeamType.ts";
+import {
+  AchievementExtendedType,
   CompletedAchievementType,
   CompletionProgressType,
 } from "api/types/AchievementType";
@@ -68,23 +71,22 @@ function extendAchievementData(
 export default function AchievementContainer({
   state,
   iteration,
+  baseAchievements,
+  teamData,
 }: {
   state: AppState;
   iteration: EventIterationType;
+  baseAchievements: AchievementExtendedType[];
+  teamData: TeamDataType;
 }) {
   const session = useContext(SessionContext);
-  const { data: baseAchievements } = useGetAchievements();
-  const { data: teamData } = useGetTeams();
 
   const iterationEnded = useMemo(
     () => Date.parse(iteration.end) <= Date.now(),
     [iteration.end],
   );
 
-  const teams = useMemo(
-    () => (teamData === undefined ? null : teamData.teams),
-    [teamData],
-  );
+  const teams = teamData.teams;
   const myTeam = useMemo(
     () =>
       teams === null || session.user === null
@@ -111,9 +113,6 @@ export default function AchievementContainer({
   }, [teams]);
 
   const achievements = useMemo(() => {
-    if (baseAchievements === undefined || teamData === undefined) {
-      return null;
-    }
     const ach = baseAchievements.map((a) => ({
       ...a,
       completed: "none" as CompletionProgressType,
@@ -125,7 +124,7 @@ export default function AchievementContainer({
   }, [baseAchievements, teamData, myTeam]);
 
   const sortedAchievements = useMemo(() => {
-    if (achievements === null || state.achievementsFilter === null) {
+    if (state.achievementsFilter === null) {
       return null;
     }
     return getSortedAchievements(
@@ -150,11 +149,7 @@ export default function AchievementContainer({
     [teamData?.effective_team_count],
   );
 
-  if (
-    state.achievementsFilter === null ||
-    sortedAchievements === null ||
-    teamData === undefined
-  )
+  if (sortedAchievements === null)
     return (
       <div className="achievements__container">
         <div>Loading achievements...</div>

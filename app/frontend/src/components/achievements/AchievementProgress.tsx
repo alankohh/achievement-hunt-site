@@ -1,4 +1,3 @@
-import { useGetAchievements } from "api/query";
 import { AchievementTeamExtendedType } from "api/types/AchievementTeamType";
 import { AchievementExtendedType } from "api/types/AchievementType";
 import { WebsocketContext } from "contexts/WebsocketContext";
@@ -22,15 +21,15 @@ const MODES = {
 export default function AchievementProgress({
   team,
   iteration,
+  achievements,
 }: {
   team: AchievementTeamExtendedType | null;
   iteration: EventIterationType;
+  achievements: AchievementExtendedType[];
 }) {
   const { state: wsState, sendSubmit } = useContext(WebsocketContext)!;
   const appState = useContext(StateContext);
   const dispatchAppState = useDispatchStateContext();
-
-  const { data: achievements } = useGetAchievements();
 
   const eventEnded: boolean = Date.now() >= Date.parse(iteration.end);
 

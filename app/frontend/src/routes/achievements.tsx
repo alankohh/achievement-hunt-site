@@ -1,5 +1,8 @@
 import { useGetAchievements, useGetIteration, useGetTeams } from "api/query";
-import { AchievementTeamExtendedType } from "api/types/AchievementTeamType";
+import {
+  AchievementTeamExtendedType,
+  TeamDataType,
+} from "api/types/AchievementTeamType";
 import { EventIterationType } from "api/types/EventIterationType.ts";
 import "assets/css/achievements.css";
 import AchievementContainer from "components/achievements/AchievementContainer";
@@ -17,6 +20,7 @@ import { Helmet } from "react-helmet";
 import { AppState } from "types/AppStateType.ts";
 import { getMyTeam } from "util/helperFunctions";
 import { Timer } from "components/common/Timer.tsx";
+import { AchievementExtendedType } from "api/types/AchievementType.ts";
 
 function HiddenAchievementCompletionPage({
   eventStart,
@@ -33,26 +37,50 @@ function HiddenAchievementCompletionPage({
 function LimitedAchievementCompletionPage({
   state,
   iteration,
+  achievements,
+  teamData,
 }: {
   state: AppState;
   iteration: EventIterationType;
+  achievements: AchievementExtendedType[];
+  teamData: TeamDataType;
 }) {
-  return <AchievementContainer state={state} iteration={iteration} />;
+  return (
+    <AchievementContainer
+      state={state}
+      iteration={iteration}
+      baseAchievements={achievements}
+      teamData={teamData}
+    />
+  );
 }
 
 function FullAchievementCompletionPage({
   team,
   state,
   iteration,
+  achievements,
+  teamData,
 }: {
   team: AchievementTeamExtendedType | null;
   state: AppState;
   iteration: EventIterationType;
+  achievements: AchievementExtendedType[];
+  teamData: TeamDataType;
 }) {
   return (
     <>
-      <AchievementProgress team={team} iteration={iteration} />
-      <AchievementContainer state={state} iteration={iteration} />
+      <AchievementProgress
+        team={team}
+        iteration={iteration}
+        achievements={achievements}
+      />
+      <AchievementContainer
+        state={state}
+        iteration={iteration}
+        baseAchievements={achievements}
+        teamData={teamData}
+      />
     </>
   );
 }
@@ -242,11 +270,15 @@ export default function AchievementCompletionPage() {
               state={state}
               team={team}
               iteration={iteration}
+              achievements={achievements!}
+              teamData={teamData}
             />
           ) : (
             <LimitedAchievementCompletionPage
               state={state}
               iteration={iteration}
+              teamData={teamData}
+              achievements={achievements!}
             />
           )}
         </div>
