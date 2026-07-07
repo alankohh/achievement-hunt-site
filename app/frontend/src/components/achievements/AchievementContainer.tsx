@@ -45,7 +45,7 @@ function extendAchievementData(
     if (completion && (completion.is_complete || completion.placement)) {
       achievement.points = calculateScore(
         nTeams,
-        achievement.completion_count,
+        Math.max(achievement.completion_count, completion!.time_placement),
         isCompetition
           ? completion!.placement!.place
           : completion!.time_placement,
@@ -57,7 +57,7 @@ function extendAchievementData(
       achievement.points = calculateScore(
         nTeams,
         achievement.completion_count,
-        achievement.completion_count + 1, // guaranteed at /achievements endpoint
+        achievement.completion_count + 1,
         isSecret,
         isCompetition,
       );
