@@ -150,7 +150,7 @@ export default function AchievementCompletionPage() {
     if (
       iterationStart === null ||
       iterationStart >= Date.now() ||
-      iterationEnd
+      iterationEnded
     ) {
       return null;
     }
