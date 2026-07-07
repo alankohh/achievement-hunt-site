@@ -42,6 +42,7 @@ export default function AchievementPage() {
             playersMap={{}}
             iterationEnded={true}
             competitionScorings={[]}
+            isScoreApproximated={false}
           />
         </div>
       </div>

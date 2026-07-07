@@ -24,7 +24,6 @@ export type AchievementType = {
   avg_difficulty_rating: number | null;
   solution?: string;
   creator?: { id: number; username: string } | null;
-  time_placement?: number; // on /achievements endpoint
 };
 
 export type AchievementExtendedType = {
@@ -43,6 +42,7 @@ export type CompletionProgressType =
 export type CompletedAchievementType = AchievementExtendedType & {
   completed: CompletionProgressType;
   points: number | null;
+  isScoreApproximated: boolean;
 };
 
 export type StaffAchievementType = {

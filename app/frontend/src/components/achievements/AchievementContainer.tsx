@@ -15,7 +15,6 @@ import {
   getMyCompletion,
   getMyTeam,
   parseMeaningfulTags,
-  scoringFuncs,
 } from "util/helperFunctions.ts";
 import Achievement from "./Achievement";
 import { AchievementPlayerType } from "api/types/AchievementPlayerType.ts";
@@ -54,10 +53,11 @@ function extendAchievementData(
         isCompetition,
       );
     } else {
+      achievement.isScoreApproximated = true;
       achievement.points = calculateScore(
         nTeams,
         achievement.completion_count,
-        achievement.time_placement!, // guaranteed at /achievements endpoint
+        achievement.completion_count + 1, // guaranteed at /achievements endpoint
         isSecret,
         isCompetition,
       );
@@ -118,6 +118,7 @@ export default function AchievementContainer({
       ...a,
       completed: "none" as CompletionProgressType,
       points: null,
+      isScoreApproximated: false,
     }));
     extendAchievementData(ach, teamData.effective_team_count, myTeam);
     return ach;
@@ -181,6 +182,7 @@ export default function AchievementContainer({
                 teamsMap={teamsMap!}
                 iterationEnded={iterationEnded}
                 competitionScorings={competitionScorings}
+                isScoreApproximated={achievement.isScoreApproximated}
               />
             ))
           )}

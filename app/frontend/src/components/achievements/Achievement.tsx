@@ -52,6 +52,7 @@ export default function Achievement({
   teamsMap,
   iterationEnded,
   competitionScorings,
+  isScoreApproximated,
 }: {
   achievement: AchievementExtendedType;
   completed: CompletionProgressType;
@@ -60,6 +61,7 @@ export default function Achievement({
   teamsMap: { [playerId: number]: AchievementTeamExtendedType };
   iterationEnded: boolean;
   competitionScorings: number[];
+  isScoreApproximated: boolean;
 }) {
   const [showCompletions, setShowCompletions] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
@@ -230,7 +232,9 @@ export default function Achievement({
               <div style={{ flexBasis: "120px" }}></div>
             </div>
             <p className="achievement__points">
-              {points === null ? "" : `${points}pts`}
+              {points === null
+                ? ""
+                : `${isScoreApproximated ? "~" : ""}${points}pts`}
             </p>
             <div className="achievement__container__info__description">
               <Markdown remarkPlugins={[remarkGfm]}>
