@@ -130,11 +130,9 @@ export default function AchievementCompletionPage() {
   const [iterationEnded, setIterationEnded] = useState(false);
 
   useEffect(() => {
-    if (iteration === undefined) {
+    if (iterationEnd === null) {
       return;
     }
-
-    const iterationEnd = Date.parse(iteration.end);
 
     if (Date.now() >= iterationEnd) {
       setIterationEnded(true);
@@ -149,7 +147,11 @@ export default function AchievementCompletionPage() {
   }, [iterationEnd]);
 
   const getNextbatchAt = useCallback(() => {
-    if (iterationStart === null || iterationStart >= Date.now()) {
+    if (
+      iterationStart === null ||
+      iterationStart >= Date.now() ||
+      iterationEnd
+    ) {
       return null;
     }
 
@@ -185,6 +187,7 @@ export default function AchievementCompletionPage() {
     () =>
       showContent &&
       (team !== null ||
+        iterationEnded ||
         (session.user !== null &&
           (session.user.is_admin || session.user.is_achievement_creator))),
     [
@@ -200,6 +203,12 @@ export default function AchievementCompletionPage() {
 
   const state = useStateContext();
   const dispatchState = useDispatchStateContext();
+
+  useEffect(() => {
+    if (state.achievementsFilter === null && achievements !== undefined) {
+      dispatchState({ id: 5, achievementsFilter: getDefaultNav(achievements) });
+    }
+  }, [state.achievementsFilter, achievements]);
 
   if (iterationLoading || achievementsLoading || teamsLoading) {
     return <TextPage text="Loading..." />;
@@ -224,11 +233,6 @@ export default function AchievementCompletionPage() {
     teamData == undefined
   ) {
     return <TextPage text="Failed to load" />;
-  }
-
-  // TODO: fix
-  if (state.achievementsFilter === null && achievements !== undefined) {
-    dispatchState({ id: 5, achievementsFilter: getDefaultNav(achievements) });
   }
 
   return (
