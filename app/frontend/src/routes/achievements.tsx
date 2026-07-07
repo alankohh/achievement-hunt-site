@@ -226,6 +226,7 @@ export default function AchievementCompletionPage() {
     return <TextPage text="Failed to load" />;
   }
 
+  // TODO: fix
   if (state.achievementsFilter === null && achievements !== undefined) {
     dispatchState({ id: 5, achievementsFilter: getDefaultNav(achievements) });
   }
@@ -264,24 +265,28 @@ export default function AchievementCompletionPage() {
           isStaff={false}
         />
 
-        <div className="achievements">
-          {team !== null ? (
-            <FullAchievementCompletionPage
-              state={state}
-              team={team}
-              iteration={iteration}
-              achievements={achievements!}
-              teamData={teamData}
-            />
-          ) : (
-            <LimitedAchievementCompletionPage
-              state={state}
-              iteration={iteration}
-              teamData={teamData}
-              achievements={achievements!}
-            />
-          )}
-        </div>
+        {achievements !== undefined ? (
+          <div className="achievements">
+            {team !== null ? (
+              <FullAchievementCompletionPage
+                state={state}
+                team={team}
+                iteration={iteration}
+                achievements={achievements}
+                teamData={teamData}
+              />
+            ) : (
+              <LimitedAchievementCompletionPage
+                state={state}
+                iteration={iteration}
+                teamData={teamData}
+                achievements={achievements}
+              />
+            )}
+          </div>
+        ) : (
+          ""
+        )}
       </div>
     </>
   );
