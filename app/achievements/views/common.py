@@ -85,6 +85,7 @@ def achievement(req, achievement):
                 "batch",
                 "solution",
                 "creator",
+                "completion_count",
             ],
             [
                 "completions__player__team_admin",
@@ -118,9 +119,13 @@ def achievements(req, iteration):
     if not iteration_ended and team is None and not req.user.is_staff:
         return error("must be on a team", status=403)
 
-    completion_prefetch = models.Prefetch(
-        "completions", queryset=AchievementCompletion.objects.select_related("player__user", "placement")
-    )
+    completion_prefetch_queryset = AchievementCompletion.objects.select_related("player__user", "placement")
+    if team is not None:
+        player_ids = [player.id for player in team.players.all()]
+        completion_prefetch_queryset = completion_prefetch_queryset.annotate(
+            is_this_team=models.Q(player_id__in=player_ids)
+        )
+    completion_prefetch = models.Prefetch("completions", queryset=completion_prefetch_queryset)
     beatmaps_prefetch = models.Prefetch("beatmaps", queryset=BeatmapConnection.objects.select_related("info"))
 
     query = Achievement.objects.select_related("batch", "creator").filter(
@@ -137,6 +142,7 @@ def achievements(req, iteration):
             "completions__is_complete",
             "beatmaps__info",
             "batch",
+            "completion_count",
         ]
         excludes = [
             "completions__player__team_admin",
@@ -154,13 +160,16 @@ def achievements(req, iteration):
 
         return success([achievement.serialize(includes, excludes) for achievement in query.all()])
 
-    def team_completion(c: AchievementCompletion) -> bool:
-        return any((player.id == c.player_id for player in team.players.all())) if team is not None else False
-
     completion_prefetch.queryset = completion_prefetch.queryset.filter(
         models.Q(player__team_id=team.id) | models.Q(placement__isnull=False)
     )
     beatmaps_prefetch.queryset = beatmaps_prefetch.queryset.filter(hide=False)
+
+    def team_completion(c) -> bool:
+        return c.is_this_team
+
+    def gives_points(a):
+        return any((c.is_this_team and (c.is_complete or c.placement is not None) for c in a.completions.all()))
 
     result = [
         achievement.serialize(
@@ -173,6 +182,8 @@ def achievements(req, iteration):
                 "completions__player__user",
                 "completions__placement",
                 "batch",
+                SerializableField("lagging_completion_count", serial_key="completion_count"),
+                SerializableField("completion_count", condition=gives_points),
             ],
             [
                 "completions__player__team_admin",
@@ -199,15 +210,16 @@ def achievement_completions(req, iteration):
 
     completions = (
         AchievementCompletion.objects.select_related("achievement", "placement")
-        .annotate(achievement_name=models.F("achievement__name"), achievement_tags=models.F("achievement__tags"))
-        .filter(player_id__in=player_ids, achievement__worth_points=True)
+        .annotate(
+            achievement_name=models.F("achievement__name"),
+            achievement_tags=models.F("achievement__tags"),
+            completions=models.F("achievement__completion_count"),
+        )
+        .filter(
+            models.Q(player_id__in=player_ids, achievement__worth_points=True)
+            & (models.Q(is_complete=True) | models.Q(placement__isnull=False))
+        )
     )
-
-    achievement_ids = [completion.achievement_id for completion in completions]
-    completion_counts = {ach.id: ach.completion_count for ach in Achievement.objects.filter(id__in=achievement_ids)}
-
-    for completion in completions:
-        completion.completions = completion_counts[completion.achievement_id]
 
     return success(
         [
