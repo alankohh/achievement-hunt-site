@@ -82,7 +82,7 @@ export const TAG_DESCRIPTIONS = {
   password:
     "Completing this achievement requires inputting the correct password. Find the input box on the achievement.",
   score:
-    "Completing this achievement requires submitting at least one scores (may include failed scores).",
+    "Completing this achievement requires submitting at least one score.",
   "multi-part":
     "This achievement has multiple parts that can be completed in any order. The achievement will glow yellow while partially completed.",
 };
